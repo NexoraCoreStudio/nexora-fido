@@ -16,6 +16,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexora.SecretManager.MtlsBa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexora.SecretManager.MtlsBasedSecretStoreServer", "Nexora.SecretManager.MtlsBasedSecretStoreServer\Nexora.SecretManager.MtlsBasedSecretStoreServer.csproj", "{C71BE2B4-45DB-5D5E-A626-4D8C822F3BF4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexora.SecretManager.VaultSecretStore", "Nexora.SecretManager.VaultSecretStore/Nexora.SecretManager.VaultSecretStore.csproj", "{4D90660D-F8DD-58AD-8520-31D1099C15F3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexora.SecretManager.VaultSecretStore.Tests", "Nexora.SecretManager.VaultSecretStore.Tests/Nexora.SecretManager.VaultSecretStore.Tests.csproj", "{027AD7E4-1720-5AD4-82B5-5EF24521BB1D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,5 +54,13 @@ Global
 		{C71BE2B4-45DB-5D5E-A626-4D8C822F3BF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C71BE2B4-45DB-5D5E-A626-4D8C822F3BF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C71BE2B4-45DB-5D5E-A626-4D8C822F3BF4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D90660D-F8DD-58AD-8520-31D1099C15F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D90660D-F8DD-58AD-8520-31D1099C15F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D90660D-F8DD-58AD-8520-31D1099C15F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D90660D-F8DD-58AD-8520-31D1099C15F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{027AD7E4-1720-5AD4-82B5-5EF24521BB1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{027AD7E4-1720-5AD4-82B5-5EF24521BB1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{027AD7E4-1720-5AD4-82B5-5EF24521BB1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{027AD7E4-1720-5AD4-82B5-5EF24521BB1D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
