@@ -1,0 +1,54 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexora.Fido", "Nexora.Fido\Nexora.Fido.csproj", "{06F74AA8-975D-504C-8345-9607A7CBE5E4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexora.Fido.Tests", "Nexora.Fido.Tests\Nexora.Fido.Tests.csproj", "{6B231188-A274-5C4D-AD30-6DB79A092784}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexora.SecretManager", "Nexora.SecretManager\Nexora.SecretManager.csproj", "{07D6BE6A-F969-559E-B1E1-96AC44B7CA42}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexora.SecretManager.FileBasedSecretStore", "Nexora.SecretManager.FileBasedSecretStore\Nexora.SecretManager.FileBasedSecretStore.csproj", "{9CF7A379-EC9A-5AEF-9500-7EA0FC84E4DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexora.SecretManager.MemoryBasedSecretStore", "Nexora.SecretManager.MemoryBasedSecretStore\Nexora.SecretManager.MemoryBasedSecretStore.csproj", "{27592E2D-54D8-5101-AC2D-2936A7572059}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexora.SecretManager.MtlsBasedSecretStoreClient", "Nexora.SecretManager.MtlsBasedSecretStoreClient\Nexora.SecretManager.MtlsBasedSecretStoreClient.csproj", "{6113E217-4D63-5512-86EB-D19062C56080}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexora.SecretManager.MtlsBasedSecretStoreServer", "Nexora.SecretManager.MtlsBasedSecretStoreServer\Nexora.SecretManager.MtlsBasedSecretStoreServer.csproj", "{C71BE2B4-45DB-5D5E-A626-4D8C822F3BF4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{06F74AA8-975D-504C-8345-9607A7CBE5E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06F74AA8-975D-504C-8345-9607A7CBE5E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06F74AA8-975D-504C-8345-9607A7CBE5E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06F74AA8-975D-504C-8345-9607A7CBE5E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B231188-A274-5C4D-AD30-6DB79A092784}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B231188-A274-5C4D-AD30-6DB79A092784}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B231188-A274-5C4D-AD30-6DB79A092784}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B231188-A274-5C4D-AD30-6DB79A092784}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07D6BE6A-F969-559E-B1E1-96AC44B7CA42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07D6BE6A-F969-559E-B1E1-96AC44B7CA42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07D6BE6A-F969-559E-B1E1-96AC44B7CA42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07D6BE6A-F969-559E-B1E1-96AC44B7CA42}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9CF7A379-EC9A-5AEF-9500-7EA0FC84E4DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9CF7A379-EC9A-5AEF-9500-7EA0FC84E4DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9CF7A379-EC9A-5AEF-9500-7EA0FC84E4DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9CF7A379-EC9A-5AEF-9500-7EA0FC84E4DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27592E2D-54D8-5101-AC2D-2936A7572059}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27592E2D-54D8-5101-AC2D-2936A7572059}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27592E2D-54D8-5101-AC2D-2936A7572059}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27592E2D-54D8-5101-AC2D-2936A7572059}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6113E217-4D63-5512-86EB-D19062C56080}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6113E217-4D63-5512-86EB-D19062C56080}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6113E217-4D63-5512-86EB-D19062C56080}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6113E217-4D63-5512-86EB-D19062C56080}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C71BE2B4-45DB-5D5E-A626-4D8C822F3BF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C71BE2B4-45DB-5D5E-A626-4D8C822F3BF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C71BE2B4-45DB-5D5E-A626-4D8C822F3BF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C71BE2B4-45DB-5D5E-A626-4D8C822F3BF4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

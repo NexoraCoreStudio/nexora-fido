@@ -1,0 +1,211 @@
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using Nexora.SecretManager;
+
+namespace Nexora.SecretManager.MtlsBasedSecretStoreClient
+{
+    /// <summary>
+    /// <see cref="IFido2SecretManager"/> implementation that forwards every call to a
+    /// server-hosted secret manager over mutual TLS: the server's certificate must chain to the
+    /// configured CA, and this client presents its own CA-issued leaf certificate in turn. Once
+    /// the channel is established, a username/password login exchanges a bearer token that is
+    /// attached to every subsequent request and transparently renewed on expiry or a 401.
+    /// </summary>
+    public sealed class MtlsBasedSecretStoreClient : IFido2SecretManager, IDisposable
+    {
+        private readonly HttpClient _http;
+        private readonly MtlsBasedSecretStoreClientOptions _options;
+        private readonly SemaphoreSlim _loginLock = new(1, 1);
+
+        private string? _token;
+        private DateTimeOffset _tokenExpiresAt = DateTimeOffset.MinValue;
+
+        public MtlsBasedSecretStoreClient(MtlsBasedSecretStoreClientOptions options)
+        {
+            _options = options;
+
+            var handler = new HttpClientHandler
+            {
+                ClientCertificateOptions = ClientCertificateOption.Manual,
+                ServerCertificateCustomValidationCallback = ValidateServerCertificate,
+            };
+            handler.ClientCertificates.Add(options.ClientCertificate);
+
+            _http = new HttpClient(handler) { BaseAddress = options.ServerBaseAddress };
+        }
+
+        private bool ValidateServerCertificate(HttpRequestMessage request, X509Certificate2? certificate, X509Chain? chain, SslPolicyErrors errors)
+        {
+            if (certificate is null || chain is null)
+                return false;
+
+            chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+            chain.ChainPolicy.CustomTrustStore.Clear();
+            chain.ChainPolicy.CustomTrustStore.Add(_options.ServerCaCertificate);
+            chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+            // "ServerCaCertificate" is the intermediate CA (see CaManager), not a self-signed root -
+            // its own issuer (the offline root) is deliberately never distributed to clients, so chain
+            // building would otherwise report the intermediate's issuer as unknown even though the
+            // intermediate itself is the trusted anchor.
+            chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+
+            return chain.Build(certificate);
+        }
+
+        public async Task<byte[]> GetAaguidAsync()
+        {
+            var response = await PostAsync<object?, GetAaguidResponse>(SecretManagerRoutes.GetAaguid, null).ConfigureAwait(false);
+            return response.Aaguid;
+        }
+
+        public async Task<CredentialRegistration> CreateCredentialAsync(string rpId, byte[] userId, string userName, string userDisplayName, bool isResident, int credProtect)
+        {
+            var request = new CreateCredentialRequest(rpId, userId, userName, userDisplayName, isResident, credProtect);
+            return await PostAsync<CreateCredentialRequest, CredentialRegistration>(SecretManagerRoutes.CreateCredential, request).ConfigureAwait(false);
+        }
+
+        public async Task<bool> CredentialExistsAsync(byte[] credentialId, string rpId)
+        {
+            var request = new CredentialExistsRequest(credentialId, rpId);
+            var response = await PostAsync<CredentialExistsRequest, CredentialExistsResponse>(SecretManagerRoutes.CredentialExists, request).ConfigureAwait(false);
+            return response.Exists;
+        }
+
+        public async Task<CredentialInfo?> FindCredentialAsync(byte[] credentialId, string rpId)
+        {
+            var request = new FindCredentialRequest(credentialId, rpId);
+            var response = await PostAsync<FindCredentialRequest, FindCredentialResponse>(SecretManagerRoutes.FindCredential, request).ConfigureAwait(false);
+            return response.Credential;
+        }
+
+        public async Task<IReadOnlyList<CredentialInfo>> FindResidentCredentialsAsync(string rpId)
+        {
+            var request = new FindResidentCredentialsRequest(rpId);
+            var response = await PostAsync<FindResidentCredentialsRequest, FindResidentCredentialsResponse>(SecretManagerRoutes.FindResidentCredentials, request).ConfigureAwait(false);
+            return response.Credentials;
+        }
+
+        public async Task<IReadOnlyList<CredentialInfo>> FindAllCredentialsAsync()
+        {
+            var response = await PostAsync<object?, FindAllCredentialsResponse>(SecretManagerRoutes.FindAllCredentials, null).ConfigureAwait(false);
+            return response.Credentials;
+        }
+
+        public async Task DeleteCredentialAsync(byte[] credentialId)
+        {
+            var request = new DeleteCredentialRequest(credentialId);
+            await PostAsync<DeleteCredentialRequest, DeleteCredentialResponse>(SecretManagerRoutes.DeleteCredential, request).ConfigureAwait(false);
+        }
+
+        public async Task<uint> IncrementSignCountAsync(byte[] credentialId)
+        {
+            var request = new IncrementSignCountRequest(credentialId);
+            var response = await PostAsync<IncrementSignCountRequest, IncrementSignCountResponse>(SecretManagerRoutes.IncrementSignCount, request).ConfigureAwait(false);
+            return response.SignCount;
+        }
+
+        public async Task<byte[]> SignAsync(byte[] credentialId, byte[] data)
+        {
+            var request = new SignRequest(credentialId, data);
+            var response = await PostAsync<SignRequest, SignResponse>(SecretManagerRoutes.Sign, request).ConfigureAwait(false);
+            return response.Signature;
+        }
+
+        public async Task<IReadOnlyList<byte[]>> GetAttestationCertificateChainAsync()
+        {
+            var response = await PostAsync<object?, GetAttestationCertificateChainResponse>(SecretManagerRoutes.GetAttestationCertificate, null).ConfigureAwait(false);
+            return response.CertificateChainDer;
+        }
+
+        public async Task<byte[]> SignWithAttestationKeyAsync(byte[] data)
+        {
+            var request = new SignWithAttestationKeyRequest(data);
+            var response = await PostAsync<SignWithAttestationKeyRequest, SignWithAttestationKeyResponse>(SecretManagerRoutes.SignWithAttestationKey, request).ConfigureAwait(false);
+            return response.Signature;
+        }
+
+        public async Task<PinState?> LoadPinStateAsync()
+        {
+            var response = await PostAsync<object?, GetPinStateResponse>(SecretManagerRoutes.GetPinState, null).ConfigureAwait(false);
+            return response.State;
+        }
+
+        public async Task SavePinStateAsync(PinState state) =>
+            await PostAsync<SavePinStateRequest, SavePinStateResponse>(SecretManagerRoutes.SavePinState, new SavePinStateRequest(state)).ConfigureAwait(false);
+
+        private async Task<TResponse> PostAsync<TRequest, TResponse>(string route, TRequest body)
+        {
+            await EnsureLoggedInAsync().ConfigureAwait(false);
+
+            var response = await SendAsync(route, body).ConfigureAwait(false);
+            if (response.StatusCode == HttpStatusCode.Unauthorized && !string.IsNullOrEmpty(_options.Password))
+            {
+                // Token may have expired server-side ahead of our local clock; force one re-login and retry.
+                // Passwordless identities have no token to refresh - the mTLS cert is all they ever send,
+                // so a 401 there is a real rejection, not staleness.
+                await LoginAsync().ConfigureAwait(false);
+                response = await SendAsync(route, body).ConfigureAwait(false);
+            }
+
+            response.EnsureSuccessStatusCode();
+            return (await response.Content.ReadFromJsonAsync<TResponse>().ConfigureAwait(false))!;
+        }
+
+        private async Task<HttpResponseMessage> SendAsync<TRequest>(string route, TRequest body)
+        {
+            using var message = new HttpRequestMessage(HttpMethod.Post, route)
+            {
+                Content = JsonContent.Create(body),
+            };
+            if (_token is not null)
+                message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+            return await _http.SendAsync(message).ConfigureAwait(false);
+        }
+
+        private async Task EnsureLoggedInAsync()
+        {
+            // No password configured => this is a passwordless server-side identity, which
+            // IdentityResolutionFilter authenticates from the mTLS certificate alone; calling
+            // /login for one always fails with 401 since the server only issues tokens to
+            // password-protected identities.
+            if (string.IsNullOrEmpty(_options.Password))
+                return;
+
+            if (_token is not null && DateTimeOffset.UtcNow < _tokenExpiresAt)
+                return;
+
+            await LoginAsync().ConfigureAwait(false);
+        }
+
+        private async Task LoginAsync()
+        {
+            await _loginLock.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                if (_token is not null && DateTimeOffset.UtcNow < _tokenExpiresAt)
+                    return;
+
+                var request = new LoginRequest(_options.Password!);
+                using var response = await _http.PostAsJsonAsync(SecretManagerRoutes.Login, request).ConfigureAwait(false);
+                response.EnsureSuccessStatusCode();
+
+                var login = (await response.Content.ReadFromJsonAsync<LoginResponse>().ConfigureAwait(false))!;
+                _token = login.Token;
+                _tokenExpiresAt = login.ExpiresAt;
+            }
+            finally
+            {
+                _loginLock.Release();
+            }
+        }
+
+        public void Dispose()
+        {
+            _http.Dispose();
+            _loginLock.Dispose();
+        }
+    }
+}
