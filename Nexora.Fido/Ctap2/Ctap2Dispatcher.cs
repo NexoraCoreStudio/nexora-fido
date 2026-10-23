@@ -26,7 +26,7 @@ namespace Nexora.Fido.Ctap2
 
             try
             {
-                return command switch
+                var response = command switch
                 {
                     Ctap2Constants.AuthenticatorGetInfo => Prepend(Ctap2Constants.Ctap2Ok, GetInfoCommand.Handle(authenticator.IsPinSet, authenticator.Aaguid)),
                     Ctap2Constants.AuthenticatorMakeCredential => Prepend(Ctap2Constants.Ctap2Ok, await MakeCredentialCommand.Handle(body, authenticator)),
@@ -35,6 +35,11 @@ namespace Nexora.Fido.Ctap2
                     Ctap2Constants.AuthenticatorGetNextAssertion => Prepend(Ctap2Constants.Ctap2Ok, await GetNextAssertionCommand.Handle(authenticator)),
                     _ => LogUnknownCommand(command),
                 };
+
+                // Only record completed WebAuthn operations. This observer must never affect CTAP.
+                if (response.Length > 0 && response[0] == Ctap2Constants.Ctap2Ok)
+                    RelyingPartyActivity.NotifySuccessfulRequest(command, body);
+                return response;
             }
             catch (Ctap2Exception ex)
             {
